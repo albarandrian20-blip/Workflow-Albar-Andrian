@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul Readiness Movement Stock & SKU - Apotek K-24</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* CSS: Parameter UI/UX & Tema POS */
+        :root {
+            --primary-green: #009900;
+            --hover-green: #007a00;
+            --primary-blue: #0056b3;
+            --hover-blue: #004494;
+            --bg-light: #f4f6f9;
+            --pass-bg: #d4edda;
+            --pass-text: #155724;
+            --fail-bg: #f8d7da;
+            --fail-text: #721c24;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .dashboard-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Modifikasi Header (Flexbox & Integrasi Logo) */
+        .dashboard-header {
+            background-color: var(--primary-green);
+            color: #ffffff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0;
+        }
+
+        .dashboard-header img {
+            height: 40px;
+            position: absolute;
+            left: 20px;
+        }
+
+        .dashboard-header-title {
+            font-size: 22px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        /* CSS: Modul Kontrol Operasional */
+        .control-panel {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .clock-widget {
+            font-weight: 600;
+            color: #444;
+            background: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background-color: var(--hover-blue);
+        }
+
+        .btn.btn-reset {
+            background-color: #d9534f;
+        }
+
+        .btn.btn-reset:hover {
+            background-color: #c9302c;
+        }
+
+        .import-module {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #ffffff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: 1px dashed #aaa;
+        }
+
+        .import-instruction {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .import-instruction b {
+            color: var(--primary-green);
+        }
+
+        /* CSS: Parameter Tabel */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: var(--primary-green);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        th small {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            font-weight: 400;
+            color: #e6ffe6;
+        }
+
+        td:first-child {
+            text-align: left;
+            font-weight: 600;
+            background-color: #fafafa;
+            width: 20%;
+            transition: background-color 0.3s;
+        }
+
+        /* CSS: Ranking Medali */
+        .rank-1 {
+            background: linear-gradient(135deg, #FFD700, #ffec8b) !important;
+            color: #000 !important;
+            border-left: 5px solid #b8860b !important;
+        }
+        .rank-2 {
+            background: linear-gradient(135deg, #e0e0e0, #f5f5f5) !important;
+            color: #000 !important;
+            border-left: 5px solid #9e9e9e !important;
+        }
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #d2b48c) !important;
+            color: #ffffff !important;
+            border-left: 5px solid #8b4513 !important;
+        }
+
+        .medal-icon {
+            margin-left: 8px;
+            font-size: 16px;
+            vertical-align: middle;
+        }
+
+        /* CSS: Elemen Input Data */
+        input[type="number"] {
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(0, 153, 0, 0.2);
+        }
+
+        /* CSS: Conditional Formatting */
+        .status-pass {
+            background-color: var(--pass-bg) !important;
+            color: var(--pass-text) !important;
+            border-color: #28a745 !important;
+        }
+
+        .status-fail {
+            background-color: var(--fail-bg) !important;
+            color: var(--fail-text) !important;
+            border-color: #dc3545 !important;
+        }
+
+        /* CSS: Legenda */
+        .legend-module {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .legend-badge {
+            display: inline-block;
+            margin-right: 15px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <img src="Logo K-24.png" alt="Logo K-24">
+            <h1 class="dashboard-header-title">Readiness Movement Stock & SKU</h1>
+        </div>
+        
+        <div class="control-panel">
+            <div class="clock-widget" id="systemClock">Memuat jam sistem...</div>
+            
+            <button id="btnRanking" class="btn" onclick="executeSorting()">Urutkan Ranking (Poin Tertinggi)</button>
+
+            <div class="import-module">
+                <div>
+                    <strong>Pembaruan Data via Excel:</strong>
+                    <input type="file" id="excelUploader" accept=".xlsx, .xls">
+                </div>
+                <span class="import-instruction">Format Header Wajib: <b>Nama Outlet | FM | MM | SM | Pareto | SKU</b></span>
+            </div>
+        </div>
+
+        <table id="operationalTable">
+            <thead>
+                <tr>
+                    <th>Nama Outlet</th>
+                    <th>Readiness FM (%)<br><small>Target 100%</small></th>
+                    <th>Readiness MM (%)<br><small>Target &ge; 95%</small></th>
+                    <th>Readiness SM (%)<br><small>Target &ge; 90%</small></th>
+                    <th>Pareto (%)<br><small>Target &gt; 97%</small></th>
+                    <th>SKU (Qty)<br><small>Target &ge; 2500</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div class="legend-module">
+            <strong>Parameter Evaluasi Pembobotan Skoring:</strong><br><br>
+            <span class="legend-badge">FM: +1.0</span>
+            <span class="legend-badge">Pareto: +1.0</span>
+            <span class="legend-badge">SKU: +1.5</span>
+            <span class="legend-badge">MM: +0.9</span>
+            <span class="legend-badge">SM: +0.8</span>
+        </div>
+    </div>
+
+    <script>
+        /** * ==========================================
+         * MODUL 1: REAL-TIME SYSTEM CLOCK
+         * ========================================== */
+        function initializeClock() {
+            const clockElement = document.getElementById('systemClock');
+            const formatOptions = { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short'
+            };
+            
+            setInterval(() => {
+                const currentTime = new Date();
+                clockElement.innerText = currentTime.toLocaleDateString('id-ID', formatOptions);
+            }, 1000);
+        }
+        initializeClock();
+
+        /** * ==========================================
+         * MODUL 2: INISIALISASI DATA & RENDER TABEL
+         * ========================================== */
+        const targetOutlets = [
+            "K-24 Wirosaban", "K-24 Karanglo", "K-24 Krapyak", "K-24 Jl. Pramuka",
+            "K-24 Imgori Timur", "K-24 Jalimbar", "K-24 Sedayu", "K-24 Palagan",
+            "K-24 Rejodani", "K-24 Medono", "K-24 Buaran", "K-24 Joko Tingkir",
+            "K-24 Veteran", "K-24 Wiradesa", "K-24 Pasar Wage", "K-24 Dr. Wahidin"
+        ];
+
+        const tableBodyDOM = document.querySelector("#operationalTable tbody");
+
+        function renderTableRows() {
+            targetOutlets.forEach((outletName, index) => {
+                const row = document.createElement("tr");
+                row.setAttribute('data-score', '0.0');
+                row.setAttribute('data-index', index);
+                
+                row.innerHTML = `
+                    <td>
+                        <span class="outlet-name">${outletName}</span>
+                        <span class="medal-icon"></span>
+                    </td>
+                    <td><input type="number" step="0.01" data-kat="FM" placeholder="0.00" oninput="processEvaluation(this)"></td>
+                    <td><input type="number" step="0.01" data-kat="MM" placeholder="0.00" oninput="processEvaluation(this)"></td>
+                    <td><input type="number" step="0.01" data-kat="SM" placeholder="0.00" oninput="processEvaluation(this)"></td>
+                    <td><input type="number" step="0.01" data-kat="Pareto" placeholder="0.00" oninput="processEvaluation(this)"></td>
+                    <td><input type="number" step="1" data-kat="SKU" placeholder="0" oninput="processEvaluation(this)"></td>
+                `;
+                tableBodyDOM.appendChild(row);
+            });
+        }
+        renderTableRows();
+
+        /** * ==========================================
+         * MODUL 3: LOGIKA BISNIS, EVALUASI & SKORING DESIMAL
+         * ========================================== */
+        function processEvaluation(inputNode) {
+            const inputValue = parseFloat(inputNode.value);
+            const category = inputNode.getAttribute('data-kat');
+            const parentRow = inputNode.closest('tr');
+            
+            inputNode.classList.remove('status-pass', 'status-fail');
+            
+            if (!isNaN(inputValue)) {
+                let isTargetMet = false;
+
+                switch (category) {
+                    case 'FM':     isTargetMet = (inputValue >= 100);  break;
+                    case 'MM':     isTargetMet = (inputValue >= 95);   break;
+                    case 'SM':     isTargetMet = (inputValue >= 90);   break;
+                    case 'Pareto': isTargetMet = (inputValue > 97);    break;
+                    case 'SKU':    isTargetMet = (inputValue >= 2500); break;
+                }
+
+                if (isTargetMet) {
+                    inputNode.classList.add('status-pass');
+                } else {
+                    inputNode.classList.add('status-fail');
+                }
+            }
+
+            calculateRowScore(parentRow);
+        }
+
+        // Algoritma Kalkulasi Poin Float/Desimal Hidden
+        function calculateRowScore(rowNode) {
+            const inputFields = rowNode.querySelectorAll('input');
+            let totalScore = 0.0;
+
+            inputFields.forEach(input => {
+                if (input.classList.contains('status-pass')) {
+                    const kat = input.getAttribute('data-kat');
+                    if (kat === 'FM') totalScore += 1.0;
+                    else if (kat === 'Pareto') totalScore += 1.0;
+                    else if (kat === 'SKU') totalScore += 1.5;
+                    else if (kat === 'MM') totalScore += 0.9;
+                    else if (kat === 'SM') totalScore += 0.8;
+                }
+            });
+
+            rowNode.setAttribute('data-score', totalScore.toFixed(1));
+        }
+
+        /** * ==========================================
+         * MODUL 4: ALGORITMA SORTING & VISUALISASI MEDALI
+         * ========================================== */
+        let isSorted = false;
+
+        function executeSorting() {
+            const sortButton = document.getElementById('btnRanking');
+            const dataRows = Array.from(document.querySelectorAll("#operationalTable tbody tr"));
+
+            // 1. Reset Visualisasi
+            dataRows.forEach(row => {
+                const tdOutlet = row.querySelector('td:first-child');
+                tdOutlet.classList.remove('rank-1', 'rank-2', 'rank-3');
+                tdOutlet.querySelector('.medal-icon').innerText = '';
+            });
+
+            if (!isSorted) {
+                // 2. Eksekusi Sorting Descending Float
+                dataRows.sort((a, b) => {
+                    const scoreA = parseFloat(a.getAttribute('data-score')) || 0.0;
+                    const scoreB = parseFloat(b.getAttribute('data-score')) || 0.0;
+                    
+                    if (scoreB === scoreA) {
+                        return parseInt(a.getAttribute('data-index')) - parseInt(b.getAttribute('data-index'));
+                    }
+                    return scoreB - scoreA;
+                });
+                
+                sortButton.innerText = "Kembalikan Urutan Semula";
+                sortButton.classList.add('btn-reset');
+                isSorted = true;
+
+                // 3. Injeksi Visual Top 3 Medals
+                if (dataRows[0] && parseFloat(dataRows[0].getAttribute('data-score')) > 0) {
+                    const td = dataRows[0].querySelector('td:first-child');
+                    td.classList.add('rank-1');
+                    td.querySelector('.medal-icon').innerText = '👑';
+                }
+                if (dataRows[1] && parseFloat(dataRows[1].getAttribute('data-score')) > 0) {
+                    const td = dataRows[1].querySelector('td:first-child');
+                    td.classList.add('rank-2');
+                    td.querySelector('.medal-icon').innerText = '🥈';
+                }
+                if (dataRows[2] && parseFloat(dataRows[2].getAttribute('data-score')) > 0) {
+                    const td = dataRows[2].querySelector('td:first-child');
+                    td.classList.add('rank-3');
+                    td.querySelector('.medal-icon').innerText = '🥉';
+                }
+
+            } else {
+                // 4. Eksekusi Sorting Ascending Default
+                dataRows.sort((a, b) => {
+                    const indexA = parseInt(a.getAttribute('data-index')) || 0;
+                    const indexB = parseInt(b.getAttribute('data-index')) || 0;
+                    return indexA - indexB;
+                });
+                
+                sortButton.innerText = "Urutkan Ranking (Poin Tertinggi)";
+                sortButton.classList.remove('btn-reset');
+                isSorted = false;
+            }
+
+            // 5. Render Ulang Urutan DOM
+            dataRows.forEach(row => tableBodyDOM.appendChild(row));
+        }
+
+        /** * ==========================================
+         * MODUL 5: INTEGRASI PARSING DATA EXCEL (SheetJS)
+         * ========================================== */
+        document.getElementById('excelUploader').addEventListener('change', function(event) {
+            const uploadedFile = event.target.files[0];
+            if (!uploadedFile) return;
+
+            const fileReader = new FileReader();
+            
+            fileReader.onload = function(e) {
+                try {
+                    const bufferData = new Uint8Array(e.target.result);
+                    const excelWorkbook = XLSX.read(bufferData, { type: 'array' });
+                    const primarySheetName = excelWorkbook.SheetNames[0];
+                    const activeWorksheet = excelWorkbook.Sheets[primarySheetName];
+                    
+                    const parsedDataJSON = XLSX.utils.sheet_to_json(activeWorksheet);
+                    const htmlTableRows = document.querySelectorAll("#operationalTable tbody tr");
+
+                    parsedDataJSON.forEach(dataRow => {
+                        const excelOutletID = dataRow['Nama Outlet'];
+                        if (!excelOutletID) return;
+
+                        htmlTableRows.forEach(htmlRow => {
+                            const htmlOutletID = htmlRow.querySelector('.outlet-name').innerText.trim();
+                            
+                            if (htmlOutletID.toLowerCase() === String(excelOutletID).trim().toLowerCase()) {
+                                const inputNodes = htmlRow.querySelectorAll('input');
+                                
+                                inputNodes.forEach(node => {
+                                    const nodeCategory = node.getAttribute('data-kat');
+                                    if (dataRow[nodeCategory] !== undefined && dataRow[nodeCategory] !== null) {
+                                        node.value = dataRow[nodeCategory];
+                                        processEvaluation(node);
+                                    }
+                                });
+                            }
+                        });
+                    });
+
+                    if (isSorted) {
+                        isSorted = false; 
+                        executeSorting();
+                    }
+
+                    alert("Sistem: Ekstraksi dan injeksi data Excel berhasil diselesaikan.");
+
+                } catch (error) {
+                    console.error("Kesalahan Parsing Excel:", error);
+                    alert("Sistem Error: Gagal memproses file Excel. Pastikan format file sesuai.");
+                } finally {
+                    document.getElementById('excelUploader').value = "";
+                }
+            };
+            
+            fileReader.readAsArrayBuffer(uploadedFile);
+        });
+    </script>
+</body>
+</html>
